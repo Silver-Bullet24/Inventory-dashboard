@@ -162,11 +162,6 @@
         }
 
        
-        import("./js/main.js")
-            .catch(function(error) {
-                console.warn("Modules could not be loaded. Running standalone mode.", error);
-                runStandaloneDashboard();
-            });
-    </script>
+     <script type="module" src="main.js"></script>
 </body>
 </html>

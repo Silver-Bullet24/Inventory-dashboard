@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Inventory Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <main class="container">
+        <header class="header">
+            <h1 id="applicationTitle">Product Inventory Dashboard</h1>
+            <p>Search, filter, and monitor your product inventory.</p>
+        </header>
+
+        <section class="controls" aria-label="Inventory controls">
+            <div class="control-group">
+                <label for="searchInput">Search Product</label>
+                <input type="text" id="searchInput" placeholder="Enter product name">
+            </div>
+
+            <div class="control-group">
+                <label for="categoryFilter">Category</label>
+                <select id="categoryFilter">
+                    <option value="All">All</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Displays">Displays</option>
+                    <option value="Storage">Storage</option>
+                    <option value="Components">Components</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button id="searchBtn" type="button">Search</button>
+                <button id="resetBtn" type="button">Reset</button>
+            </div>
+        </section>
+
+        <section class="summary" aria-label="Inventory summary">
+            <div class="summary-card">
+                <span class="summary-label">Total Inventory Value</span>
+                <strong id="totalInventoryValue">₱0</strong>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">Low-Stock Products</span>
+                <strong id="lowStockCount">0</strong>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">Out-of-Stock Products</span>
+                <strong id="outOfStockCount">0</strong>
+            </div>
+        </section>
+
+        <section>
+            <h2>Products</h2>
+            <div id="noResultsMessage">No products found</div>
+            <div id="productList" class="product-list" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <script>
+        
+        const productData = [
+            { id: 1, name: "Wireless Mouse", category: "Accessories", price: 650, stock: 12 },
+            { id: 2, name: "Mechanical Keyboard", category: "Accessories", price: 1800, stock: 5 },
+            { id: 3, name: "24-inch Monitor", category: "Displays", price: 7800, stock: 3 },
+            { id: 4, name: "1TB SSD", category: "Storage", price: 4200, stock: 0 },
+            { id: 5, name: "Webcam", category: "Accessories", price: 1500, stock: 8 },
+            { id: 6, name: "16GB RAM", category: "Components", price: 2500, stock: 4 }
+        ];
+
+        function runStandaloneDashboard() {
+            const searchInput = document.getElementById("searchInput");
+            const categoryFilter = document.getElementById("categoryFilter");
+            const searchBtn = document.getElementById("searchBtn");
+            const resetBtn = document.getElementById("resetBtn");
+            const productList = document.getElementById("productList");
+            const noResultsMessage = document.getElementById("noResultsMessage");
+
+            function stockStatus(stock) {
+                if (stock === 0) return "Out of Stock";
+                if (stock >= 1 && stock <= 5) return "Low Stock";
+                return "In Stock";
+            }
+
+            function displayProducts(list) {
+                productList.innerHTML = "";
+
+                if (list.length === 0) {
+                    noResultsMessage.style.display = "block";
+                    return;
+                }
+
+                noResultsMessage.style.display = "none";
+
+                list.forEach(function(product) {
+                    const card = document.createElement("article");
+                    card.className = "product-card";
+
+                    card.innerHTML =
+                        "<h3>" + product.name + "</h3>" +
+                        "<p><strong>Category:</strong> " + product.category + "</p>" +
+                        "<p class='price'>₱" + product.price.toLocaleString("en-PH") + "</p>" +
+                        "<p><strong>Stock:</strong> " + product.stock + "</p>" +
+                        "<span class='status'>" + stockStatus(product.stock) + "</span>";
+
+                    productList.appendChild(card);
+                });
+            }
+
+            function updateResults() {
+                const query = searchInput.value.trim().toLowerCase();
+                const category = categoryFilter.value;
+
+                const results = productData.filter(function(product) {
+                    const matchesSearch =
+                        query === "" ||
+                        product.name.toLowerCase().includes(query);
+
+                    const matchesCategory =
+                        category === "All" ||
+                        product.category === category;
+
+                    return matchesSearch && matchesCategory;
+                });
+
+                displayProducts(results);
+            }
+
+            function updateSummary() {
+                const total = productData.reduce(function(sum, product) {
+                    return sum + (product.price * product.stock);
+                }, 0);
+
+                const lowStock = productData.filter(function(product) {
+                    return product.stock >= 1 && product.stock <= 5;
+                }).length;
+
+                const outOfStock = productData.filter(function(product) {
+                    return product.stock === 0;
+                }).length;
+
+                document.getElementById("totalInventoryValue").textContent =
+                    "₱" + total.toLocaleString("en-PH");
+                document.getElementById("lowStockCount").textContent = lowStock;
+                document.getElementById("outOfStockCount").textContent = outOfStock;
+            }
+
+            searchBtn.addEventListener("click", updateResults);
+            searchInput.addEventListener("input", updateResults);
+            categoryFilter.addEventListener("change", updateResults);
+
+            resetBtn.addEventListener("click", function() {
+                searchInput.value = "";
+                categoryFilter.value = "All";
+                updateResults();
+                updateSummary();
+            });
+
+            updateSummary();
+            displayProducts(productData);
+        }
+
+       
+        import("./js/main.js")
+            .catch(function(error) {
+                console.warn("Modules could not be loaded. Running standalone mode.", error);
+                runStandaloneDashboard();
+            });
+    </script>
+</body>
+</html>
